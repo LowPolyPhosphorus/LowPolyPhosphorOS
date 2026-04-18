@@ -1,1 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LowPolyPhosphorOS</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/boot.css" />
+  <link rel="stylesheet" href="css/xp-theme.css" />
+  <link rel="stylesheet" href="css/window.css" />
+  <link rel="stylesheet" href="css/taskbar.css" />
+  <link rel="stylesheet" href="css/apps.css" />
+</head>
+<body>
 
+  <!-- BOOT SCREEN -->
+  <div id="boot-screen">
+    <div class="boot-logo">
+      <div class="boot-logo-bar"></div>
+      <div class="boot-logo-text">
+        <span class="boot-low">LowPoly</span><span class="boot-phosphor">PhosphorOS</span>
+      </div>
+    </div>
+    <div class="boot-progress-wrap">
+      <div class="boot-progress-bar">
+        <div class="boot-progress-fill" id="boot-progress-fill"></div>
+      </div>
+    </div>
+    <div class="boot-tagline">Loading your experience...</div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="hidden">
+    <div class="login-bg"></div>
+    <div class="login-box">
+      <div class="login-avatar">👤</div>
+      <div class="login-username">LowPolyPhosphorus</div>
+      <button class="login-btn" id="login-btn">Log On</button>
+    </div>
+    <div class="login-footer">
+      <span>LowPolyPhosphorOS</span>
+    </div>
+  </div>
+
+  <!-- DESKTOP -->
+  <div id="desktop" class="hidden">
+
+    <!-- Desktop Icons -->
+    <div class="desktop-icons" id="desktop-icons">
+
+      <div class="desktop-icon" data-app="browser">
+        <div class="icon-img">🌐</div>
+        <div class="icon-label">PhosphorBrowser</div>
+      </div>
+
+      <div class="desktop-icon" data-app="about">
+        <div class="icon-img">👤</div>
+        <div class="icon-label">About Me</div>
+      </div>
+
+      <div class="desktop-icon" data-app="projects">
+        <div class="icon-img">📁</div>
+        <div class="icon-label">My Projects</div>
+      </div>
+
+      <div class="desktop-icon" data-app="photos">
+        <div class="icon-img">📷</div>
+        <div class="icon-label">Photos</div>
+      </div>
+
+      <div class="desktop-icon" data-app="contact">
+        <div class="icon-img">✉️</div>
+        <div class="icon-label">Contact</div>
+      </div>
+
+      <div class="desktop-icon" data-app="notepad">
+        <div class="icon-img">📝</div>
+        <div class="icon-label">Notepad</div>
+      </div>
+
+    </div>
+
+    <!-- Window Container -->
+    <div id="window-container"></div>
+
+    <!-- Taskbar -->
+    <div id="taskbar">
+      <button id="start-btn">
+        <span class="start-icon">⊞</span>
+        <span class="start-text">Start</span>
+      </button>
+
+      <div class="taskbar-divider"></div>
+
+      <div id="taskbar-windows"></div>
+
+      <div class="taskbar-tray">
+        <span id="taskbar-clock"></span>
+      </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="hidden">
+      <div class="start-menu-header">
+        <div class="start-menu-avatar">👤</div>
+        <div class="start-menu-user">LowPolyPhosphorus</div>
+      </div>
+      <div class="start-menu-body">
+        <div class="start-menu-left">
+          <div class="start-menu-item" data-app="browser">🌐 PhosphorBrowser</div>
+          <div class="start-menu-item" data-app="about">👤 About Me</div>
+          <div class="start-menu-item" data-app="projects">📁 My Projects</div>
+          <div class="start-menu-item" data-app="photos">📷 Photos</div>
+          <div class="start-menu-item" data-app="contact">✉️ Contact</div>
+          <div class="start-menu-item" data-app="notepad">📝 Notepad</div>
+        </div>
+      </div>
+      <div class="start-menu-footer">
+        <div class="start-menu-footer-btn" id="start-shutdown">🔴 Shut Down</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SHUTDOWN SCREEN -->
+  <div id="shutdown-screen" class="hidden">
+    <div class="shutdown-text">It is now safe to turn off your computer.</div>
+  </div>
+
+  <script src="js/boot.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/windowManager.js"></script>
+  <script src="js/apps.js"></script>
+  <script src="js/desktop.js"></script>
+  <script src="js/startMenu.js"></script>
+  <script src="js/taskbar.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

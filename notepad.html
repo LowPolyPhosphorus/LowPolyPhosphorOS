@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Untitled - Notepad</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, Arial, sans-serif;
+        background: #c0c0c0;
+        color: #000;
+        cursor: default;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .menu-bar {
+        background: #c0c0c0;
+        border-bottom: 1px solid #808080;
+        padding: 2px 4px;
+        display: flex;
+        gap: 0;
+        font-size: 11px;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 10;
+      }
+      .menu-bar .menu-item {
+        padding: 3px 8px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        position: relative;
+      }
+      .menu-bar .menu-item:hover, .menu-bar .menu-item.open {
+        background: #000080;
+        color: white;
+        border-color: #fff;
+      }
+      .menu-bar .menu-item.open .dropdown { display: block; }
+      .dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 180px;
+        background: #c0c0c0;
+        border: 2px solid;
+        border-color: #fff #808080 #808080 #fff;
+        padding: 2px;
+        z-index: 100;
+        font-size: 11px;
+      }
+      .dropdown .dropdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 20px 4px 24px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        color: #000;
+      }
+      .dropdown .dropdown-item:hover {
+        background: #000080;
+        color: white;
+        border-color: #fff;
+      }
+      .dropdown .dropdown-item .shortcut { color: #666; margin-left: 20px; font-size: 10px; }
+      .dropdown .dropdown-item:hover .shortcut { color: #fff; }
+      .dropdown .divider { height: 1px; background: #808080; margin: 2px 4px; border-bottom: 1px solid #fff; }
+      .editor-area {
+        flex: 1;
+        margin: 4px;
+        background: #fff;
+        border: 2px solid;
+        border-color: #808080 #fff #fff #808080;
+        overflow: auto;
+        padding: 2px;
+      }
+      #editor {
+        width: 100%;
+        min-height: 100%;
+        padding: 8px 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        outline: none;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      #editor img { max-width: 100%; height: auto; image-rendering: auto; }
+      .status-bar {
+        height: 20px;
+        background: #c0c0c0;
+        border-top: 2px solid #808080;
+        display: flex;
+        align-items: center;
+        padding: 0 6px;
+        font-size: 11px;
+        flex-shrink: 0;
+      }
+      .status-bar span { color: #444; }
+    </style>
+  </head>
+  <body>
+    <div class="menu-bar" id="menuBar">
+      <div class="menu-item" data-menu="file">
+        File
+        <div class="dropdown">
+          <div class="dropdown-item" data-action="new">New</div>
+          <div class="divider"></div>
+          <div class="dropdown-item" data-action="save">Save As... <span class="shortcut">Ctrl+S</span></div>
+          <div class="divider"></div>
+          <div class="dropdown-item" data-action="exit">Exit</div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="edit">
+        Edit
+        <div class="dropdown">
+          <div class="dropdown-item" data-action="cut">Cut <span class="shortcut">Ctrl+X</span></div>
+          <div class="dropdown-item" data-action="copy">Copy <span class="shortcut">Ctrl+C</span></div>
+          <div class="dropdown-item" data-action="paste">Paste <span class="shortcut">Ctrl+V</span></div>
+          <div class="divider"></div>
+          <div class="dropdown-item" data-action="selectall">Select All <span class="shortcut">Ctrl+A</span></div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="format">
+        Format
+        <div class="dropdown">
+          <div class="dropdown-item" data-action="bold">Bold <span class="shortcut">Ctrl+B</span></div>
+          <div class="dropdown-item" data-action="italic">Italic <span class="shortcut">Ctrl+I</span></div>
+          <div class="dropdown-item" data-action="underline">Underline <span class="shortcut">Ctrl+U</span></div>
+          <div class="divider"></div>
+          <div class="dropdown-item" data-action="fontsize">Font Size...</div>
+        </div>
+      </div>
+      <div class="menu-item" data-menu="help">
+        Help
+        <div class="dropdown">
+          <div class="dropdown-item" data-action="about">About Notepad</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-area">
+      <div id="editor" contenteditable="true" spellcheck="false"></div>
+    </div>
+
+    <div class="status-bar">
+      <span id="statusText">Ln 1, Col 1</span>
+    </div>
+
+    <script>
+      const editor = document.getElementById('editor');
+      const statusText = document.getElementById('statusText');
+
+      // ─── Menu System ──────────────────────────
+      document.querySelectorAll('.menu-item').forEach(item => {
+        const btn = item;
+        const dropdown = btn.querySelector('.dropdown');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = btn.classList.contains('open');
+          closeAllMenus();
+          if (!isOpen) btn.classList.add('open');
+        });
+        btn.addEventListener('mouseenter', () => {
+          if (document.querySelector('.menu-item.open')) {
+            closeAllMenus();
+            btn.classList.add('open');
+          }
+        });
+        if (dropdown) {
+          dropdown.addEventListener('click', (e) => { e.stopPropagation(); });
+        }
+      });
+
+      function closeAllMenus() {
+        document.querySelectorAll('.menu-item.open').forEach(el => el.classList.remove('open'));
+      }
+      document.addEventListener('click', closeAllMenus);
+
+      document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeAllMenus();
+          const action = item.dataset.action;
+          switch (action) {
+            case 'new': editor.innerHTML = ''; updateStatus(); break;
+            case 'save': {
+              const blob = new Blob([editor.innerText], { type: 'text/plain' });
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = 'untitled.txt';
+              a.click();
+              URL.revokeObjectURL(a.href);
+              break;
+            }
+            case 'exit': document.body.innerHTML = ''; break;
+            case 'cut': document.execCommand('cut'); break;
+            case 'copy': document.execCommand('copy'); break;
+            case 'paste': document.execCommand('paste'); break;
+            case 'selectall': selectAllText(); break;
+            case 'bold': document.execCommand('bold'); break;
+            case 'italic': document.execCommand('italic'); break;
+            case 'underline': document.execCommand('underline'); break;
+            case 'fontsize': {
+              const current = prompt('Enter font size (8-72):', '12');
+              if (current && !isNaN(current) && current >= 8 && current <= 72) {
+                document.execCommand('fontSize', false, '7');
+                const sel = window.getSelection();
+                if (sel.rangeCount) {
+                  const span = document.createElement('span');
+                  span.style.fontSize = current + 'px';
+                  span.appendChild(sel.getRangeAt(0).extractContents());
+                  sel.getRangeAt(0).insertNode(span);
+                }
+              }
+              break;
+            }
+            case 'about': alert('LowPolyPhoshporOS Notepad\nVersion 1.0\n© 2026 LowPolyPhosphorus'); break;
+          }
+          editor.focus();
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'b') { e.preventDefault(); document.execCommand('bold'); }
+        if (e.ctrlKey && e.key === 'i') { e.preventDefault(); document.execCommand('italic'); }
+        if (e.ctrlKey && e.key === 'u') { e.preventDefault(); document.execCommand('underline'); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); editor.focus(); }
+        if (e.ctrlKey && e.key === 'a') { e.preventDefault(); selectAllText(); }
+      });
+
+      function selectAllText() {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        updateStatus();
+      }
+
+      // ─── Image Paste Compression ───────────────
+      editor.addEventListener('paste', function(e) {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') === 0) {
+            e.preventDefault();
+            const blob = items[i].getAsFile();
+            if (!blob) continue;
+            const img = new Image();
+            img.onload = function() {
+              const canvas = document.createElement('canvas');
+              let w = img.width, h = img.height;
+              if (w > 800) { h = Math.round(h * 800 / w); w = 800; }
+              if (h > 600) { w = Math.round(w * 600 / h); h = 600; }
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              canvas.toBlob(function(compressedBlob) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                  const dataUrl = ev.target.result;
+                  const imgElem = document.createElement('img');
+                  imgElem.src = dataUrl;
+                  imgElem.style.maxWidth = '100%';
+                  imgElem.style.height = 'auto';
+                  const sel = window.getSelection();
+                  if (sel.rangeCount) {
+                    sel.getRangeAt(0).deleteContents();
+                    sel.getRangeAt(0).insertNode(imgElem);
+                    sel.getRangeAt(0).setStartAfter(imgElem);
+                    sel.getRangeAt(0).collapse(true);
+                  }
+                  updateStatus();
+                };
+                reader.readAsDataURL(compressedBlob);
+              }, 'image/jpeg', 0.6);
+            };
+            img.src = URL.createObjectURL(blob);
+          }
+        }
+      });
+
+      function updateStatus() {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) { statusText.textContent = 'Ln 1, Col 1'; return; }
+        const node = sel.getRangeAt(0).startContainer;
+        const offset = sel.getRangeAt(0).startOffset;
+        const text = node.textContent || '';
+        const before = text.substring(0, offset);
+        const line = (before.match(/\n/g) || []).length + 1;
+        const col = before.lastIndexOf('\n') === -1 ? offset + 1 : offset - before.lastIndexOf('\n');
+        statusText.textContent = 'Ln ' + line + ', Col ' + col;
+      }
+
+      editor.addEventListener('keyup', updateStatus);
+      editor.addEventListener('mouseup', updateStatus);
+      editor.addEventListener('click', updateStatus);
+      editor.addEventListener('input', updateStatus);
+
+      // ─── Link clicks navigate the TOP window ──
+      editor.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A') {
+          e.preventDefault();
+          window.top.location.href = e.target.getAttribute('href');
+        }
+      });
+
+      updateStatus();
+    </script>
+  </body>
+</html>

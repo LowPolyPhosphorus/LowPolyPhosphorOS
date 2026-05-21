@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LowPolyPhosphorus</title>
+  <link rel="shortcut icon" href="app-icons/msie1-0.png">
+  <style>
+    * { margin: 0; padding: 0; }
+    body {
+      font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Tahoma, sans-serif;
+      background: #008080;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      cursor: default;
+    }
+    .desktop-icon {
+      position: absolute;
+      width: 72px;
+      text-align: center;
+      color: white;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .desktop-icon img {
+      width: 32px;
+      height: 32px;
+      display: block;
+      margin: 0 auto 2px auto;
+      image-rendering: pixelated;
+      pointer-events: none;
+    }
+    .desktop-icon span {
+      display: block;
+      text-shadow: 1px 1px 1px #000;
+      word-wrap: break-word;
+      line-height: 1.2;
+      pointer-events: none;
+    }
+    .desktop-icon.selected {
+      background: rgba(0,0,100,0.3);
+      outline: 1px dotted white;
+      outline-offset: -1px;
+    }
+    .desktop-icon.dragging {
+      z-index: 50;
+    }
+    #taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 30px;
+      background: #c0c0c0;
+      display: flex;
+      align-items: center;
+      padding: 0 2px;
+      z-index: 10000;
+      border-top: 2px solid #fff;
+    }
+    #startBtn {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px 2px 4px;
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #fff #808080 #808080 #fff;
+      cursor: pointer;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-size: 11px;
+      font-weight: bold;
+      height: 22px;
+      outline: none;
+    }
+    #startBtn:active { border-color: #808080 #fff #fff #808080; }
+    #startBtn img { width: 16px; height: 16px; image-rendering: pixelated; pointer-events: none; }
+    .taskbar-divider { width: 2px; height: 22px; background: #808080; border-left: 1px solid #fff; margin: 0 2px; }
+    #taskbarWindows { display: flex; align-items: center; gap: 2px; flex: 1; overflow: hidden; padding: 0 2px; }
+    .taskbar-window-btn {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #fff #808080 #808080 #fff;
+      cursor: pointer;
+      max-width: 140px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      height: 22px;
+    }
+    .taskbar-window-btn:active { border-color: #808080 #fff #fff #808080; }
+    .taskbar-window-btn.pressed { border-color: #808080 #fff #fff #808080; background: #a0a0a0; }
+    .taskbar-window-btn img { width: 14px; height: 14px; flex-shrink: 0; image-rendering: pixelated; pointer-events: none; }
+    .tray-area {
+      display: flex; align-items: center; gap: 2px; height: 22px;
+      border: 2px solid; border-color: #808080 #fff #fff #808080;
+      padding: 0 4px; background: #c0c0c0;
+      font-size: 11px; font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    }
+    .tray-item { display: flex; align-items: center; gap: 2px; padding: 0 2px; height: 100%; cursor: default; }
+    .tray-item svg { width: 14px; height: 14px; pointer-events: none; }
+    .tray-battery { display: none; }
+    .tray-volume { position: relative; }
+    .tray-clock { cursor: pointer; padding: 0 4px; }
+    .volume-popup {
+      display: none; position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff;
+      padding: 8px 10px; flex-direction: column; align-items: center; gap: 4px; z-index: 11000;
+    }
+    .volume-popup::before { content: ''; position: absolute; bottom: -12px; left: -4px; right: -4px; height: 14px; }
+    .tray-volume:hover .volume-popup, .volume-popup:hover { display: flex; }
+    .volume-popup input[type="range"] { width: 80px; height: 4px; -webkit-appearance: none; appearance: none; background: #fff; border: 1px solid #808080; outline: none; }
+    .volume-popup input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 16px; background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; }
+    .volume-popup input[type="range"]::-moz-range-thumb { width: 12px; height: 16px; background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; }
+    #startMenu {
+      display: none; position: fixed; bottom: 30px; left: 0; width: 200px;
+      background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff;
+      z-index: 9999; padding: 2px;
+    }
+    #startMenu.show { display: block; }
+    .start-menu-header {
+      background: linear-gradient(90deg, #000080, #1084d0); color: white;
+      font-size: 16px; font-weight: bold; padding: 6px 8px; margin-bottom: 4px;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif; display: flex; align-items: center; gap: 6px;
+    }
+    .start-menu-header img { width: 20px; height: 20px; pointer-events: none; }
+    .start-menu-item {
+      display: flex; align-items: center; gap: 6px; padding: 4px 8px;
+      font-size: 11px; font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      cursor: pointer; border: 1px solid transparent;
+    }
+    .start-menu-item:hover { background: #000080; color: white; border: 1px solid #fff; }
+    .start-menu-item img { width: 16px; height: 16px; pointer-events: none; }
+    .start-menu-separator { height: 1px; background: #808080; margin: 2px 4px; border-bottom: 1px solid #fff; }
+    .window {
+      position: absolute; display: flex; flex-direction: column;
+      background: #c0c0c0; border: 2px solid; border-color: #fff #404040 #404040 #fff;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3); min-width: 200px; min-height: 100px;
+    }
+    .window-titlebar {
+      background: linear-gradient(90deg, #000080, #1084d0); color: white;
+      font-size: 11px; font-weight: bold; font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      padding: 3px 4px; display: flex; align-items: center; cursor: move; gap: 4px;
+    }
+    .window-titlebar.inactive { background: linear-gradient(90deg, #808080, #b0b0b0); }
+    .window-titlebar img { width: 14px; height: 14px; pointer-events: none; }
+    .window-titlebar .title-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .window-titlebar .win-buttons { display: flex; gap: 2px; flex-shrink: 0; }
+    .window-titlebar .win-btn {
+      width: 16px; height: 14px; background: #c0c0c0;
+      border: 2px solid; border-color: #fff #808080 #808080 #fff;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: bold; padding: 0; line-height: 1; color: #000;
+    }
+    .window-titlebar .win-btn:active, .window-titlebar .win-btn.close-btn:active { border-color: #808080 #fff #fff #808080; }
+    .window-body { flex: 1; padding: 2px; overflow: hidden; background: #fff; margin: 2px; position: relative; }
+    .window-body iframe { width: 100%; height: 100%; border: none; background: #fff; display: block; }
+    .window-resizer {
+      position: absolute; right: 0; bottom: 0; width: 14px; height: 14px;
+      cursor: se-resize; background: #c0c0c0;
+      border-top: 2px solid #808080; border-left: 2px solid #808080;
+      border-bottom: 2px solid #fff; border-right: 2px solid #fff;
+      z-index: 10;
+    }
+    .calendar-popup {
+      display: none; position: absolute; bottom: 28px; right: 0;
+      background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff;
+      padding: 6px; z-index: 11000; width: 190px;
+    }
+    .calendar-popup.show { display: block; }
+    .calendar-popup table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: 'MS Sans Serif', Tahoma, sans-serif; }
+    .calendar-popup th { color: #000; font-weight: bold; padding: 2px; text-align: center; }
+    .calendar-popup td { text-align: center; padding: 2px; cursor: pointer; border: 1px solid transparent; }
+    .calendar-popup td.today { background: #000080; color: white; }
+    .calendar-popup td:hover { background: #000080; color: white; }
+    .calendar-popup td.other-month { color: #808080; }
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .cal-header span { font-weight: bold; font-size: 11px; }
+    .cal-header button { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; font-size: 11px; font-weight: bold; padding: 0 4px; line-height: 14px; }
+    .cal-header button:active { border-color: #808080 #fff #fff #808080; }
+    .cal-day-label { font-size: 10px; margin-top: 4px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="desktop-icon" id="desktopNotepad" style="top:20px;left:20px">
+    <img src="app-icons/notepad-2.png" alt="Notepad" draggable="false">
+    <span>Notepad</span>
+  </div>
+
+  <div class="desktop-icon" id="desktopNow" style="top:110px;left:20px">
+    <img src="app-icons/notepad-2.png" alt="Now" draggable="false">
+    <span>Now</span>
+  </div>
+
+  <div id="startMenu">
+    <div class="start-menu-header">
+      <img src="app-icons/windows-0.png" alt="">
+      LowPolyPhoshporOS
+    </div>
+    <div class="start-menu-item" id="startNotepad">
+      <img src="app-icons/notepad-2.png" alt="">
+      Notepad
+    </div>
+    <div class="start-menu-item" id="startWelcome">
+      <img src="app-icons/notepad-2.png" alt="">
+      Welcome
+    </div>
+    <div class="start-menu-item" id="startNow">
+      <img src="app-icons/notepad-2.png" alt="">
+      Now
+    </div>
+    <div class="start-menu-separator"></div>
+    <div class="start-menu-item" id="startShutdown" style="margin-top:4px;">
+      <img src="app-icons/shutdown.png" alt="">
+      Shut Down...
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <button id="startBtn">
+      <img src="app-icons/windows-0.png" alt="Start">
+      Start
+    </button>
+    <div class="taskbar-divider"></div>
+    <div id="taskbarWindows"></div>
+    <div class="tray-area">
+      <div class="tray-item tray-battery" id="batteryContainer" style="display:none;">
+        <svg viewBox="0 0 24 24" width="14" height="14"><rect x="2" y="7" width="16" height="10" rx="2" fill="none" stroke="#000" stroke-width="1.5"/><rect id="batteryFill" x="4" y="9" width="12" height="6" rx="1" fill="#000"/><rect x="18" y="10" width="2" height="4" rx="1" fill="#000"/></svg>
+        <span id="batteryPercent" style="font-size:10px;">--%</span>
+      </div>
+      <div class="tray-item tray-volume">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.5v7a4.49 4.49 0 0 0 2.5-3.5zm2.5 0A7.5 7.5 0 0 0 16 5v1.5a6 6 0 0 1 3.5 5.5 6 6 0 0 1-3.5 5.5V19a7.5 7.5 0 0 0 5-7z"/></svg>
+        <div class="volume-popup"><input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5"></div>
+      </div>
+      <div class="tray-item tray-clock" id="clockContainer">
+        <span id="clockTime">--:--</span>
+        <div class="calendar-popup" id="calendarPopup">
+          <div class="cal-header"><button id="calPrev">&#8249;</button><span id="calMonthYear">January 2026</span><button id="calNext">&#8250;</button></div>
+          <table id="calGrid"></table>
+          <div class="cal-day-label" id="calDayLabel">Today</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── Grid snap constant ────────────────────
+    const ICON_GRID = 75; // px — icons snap to multiples of this
+
+    // Welcome always auto-opens on page load (but not pasting into the same session)
+    let welcomeShownThisSession = false;
+
+    let z = 100;
+    let winIdCounter = 0;
+    const openWindows = {};
+    let savedWindows = {};
+    try { savedWindows = JSON.parse(sessionStorage.getItem('winState')) || {}; } catch(e) {}
+
+    // ── External links always open in a new tab ────────────────────────────────
+    function openUrl(href, linkText) {
+      window.open(href, '_blank');
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clockTime').textContent =
+        String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    }
+    updateClock();
+    setInterval(updateClock, 10000);
+
+    let calendarDate = new Date();
+    function renderCalendar() {
+      const y = calendarDate.getFullYear(), m = calendarDate.getMonth();
+      const today = new Date();
+      const firstDay = new Date(y,m,1).getDay();
+      const daysInMonth = new Date(y,m+1,0).getDate();
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+      document.getElementById('calMonthYear').textContent = monthNames[m] + ' ' + y;
+      let html = '<tr>';
+      dayNames.forEach(d => { html += '<th>' + d + '</th>'; });
+      html += '</tr><tr>';
+      for (let i = 0; i < firstDay; i++) html += '<td class="other-month"></td>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isT = (y === today.getFullYear() && m === today.getMonth() && d === today.getDate());
+        html += '<td class="' + (isT ? 'today' : '') + '">' + d + '</td>';
+        if ((firstDay + d) % 7 === 0) html += '</tr><tr>';
+      }
+      html += '</tr>';
+      document.getElementById('calGrid').innerHTML = html;
+      document.getElementById('calDayLabel').textContent =
+        (y === today.getFullYear() && m === today.getMonth())
+          ? 'Today: ' + today.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })
+          : monthNames[m] + ' ' + y;
+    }
+    document.getElementById('clockContainer').addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const popup = document.getElementById('calendarPopup');
+      popup.classList.toggle('show');
+      if(popup.classList.contains('show')){ calendarDate = new Date(); renderCalendar(); }
+    });
+    document.addEventListener('click',(e)=>{
+      const p = document.getElementById('calendarPopup');
+      if(p.classList.contains('show') && !p.contains(e.target) && !document.getElementById('clockContainer').contains(e.target)) p.classList.remove('show');
+    });
+    document.getElementById('calPrev').addEventListener('click',(e)=>{ e.stopPropagation(); calendarDate.setMonth(calendarDate.getMonth()-1); renderCalendar(); });
+    document.getElementById('calNext').addEventListener('click',(e)=>{ e.stopPropagation(); calendarDate.setMonth(calendarDate.getMonth()+1); renderCalendar(); });
+
+    if('getBattery' in navigator){
+      navigator.getBattery().then(b=>{
+        function ub(){
+          const p = Math.round(b.level*100);
+          const c = document.getElementById('batteryContainer');
+          const f = document.getElementById('batteryFill');
+          const l = document.getElementById('batteryPercent');
+          c.style.display = 'flex';
+          l.textContent = p + '%';
+          const w = Math.round((p/100)*12);
+          f.setAttribute('width', Math.max(1,w));
+          f.setAttribute('fill', b.charging ? '#ff0' : p<=20 ? '#f00' : '#000');
+        }
+        ub();
+        b.addEventListener('levelchange', ub);
+        b.addEventListener('chargingchange', ub);
+      }).catch(()=>{});
+    }
+
+    document.getElementById('volumeSlider').addEventListener('input', function(){
+      window.dispatchEvent(new CustomEvent('volumechange',{detail:parseFloat(this.value)}));
+    });
+
+    const startBtn = document.getElementById('startBtn');
+    const startMenu = document.getElementById('startMenu');
+    startBtn.addEventListener('click', (e)=>{ e.stopPropagation(); startMenu.classList.toggle('show'); });
+    document.addEventListener('click', ()=>{ startMenu.classList.remove('show'); });
+    startMenu.addEventListener('click', (e)=>{ e.stopPropagation(); });
+    document.getElementById('startNotepad').addEventListener('click', ()=>{ startMenu.classList.remove('show'); openBlankNotepad(); });
+    document.getElementById('startWelcome').addEventListener('click', ()=>{ startMenu.classList.remove('show'); openApp('welcome', 'Notepad - Welcome', 'welcome.html', 'app-icons/notepad-2.png'); });
+    document.getElementById('startNow').addEventListener('click', ()=>{ startMenu.classList.remove('show'); openApp('now', 'Notepad - Now', 'now.html', 'app-icons/notepad-2.png'); });
+    document.getElementById('startShutdown').addEventListener('click', ()=>{
+      startMenu.classList.remove('show');
+      if(confirm('Are you sure you want to shut down?')){
+        document.body.innerHTML = '<div style="background:#000080;color:#fff;height:100vh;display:flex;align-items:center;justify-content:center;font-family:MS Sans Serif;font-size:24px;">It\'s now safe to turn off your computer.</div>';
+      }
+    });
+
+    // ─── Open blank notepad ────────────────────
+    // Each blank notepad gets a unique id so you can have multiple
+    let blankCounter = 0;
+    function openBlankNotepad() {
+      blankCounter++;
+      const id = 'notepad' + blankCounter;
+      openApp(id, 'Untitled - Notepad', 'notepad.html', 'app-icons/notepad-2.png');
+    }
+
+    // Desktop Notepad icon → blank notepad
+    document.getElementById('desktopNotepad').addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      openBlankNotepad();
+    });
+    document.getElementById('desktopNotepad').addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Select only
+    });
+
+    // Desktop Now icon
+    document.getElementById('desktopNow').addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      openApp('now', 'Notepad - Now', 'now.html', 'app-icons/notepad-2.png');
+    });
+    document.getElementById('desktopNow').addEventListener('click', (e) => { e.stopPropagation(); });
+
+    function getIconForUrl(url, id) {
+      if(url === 'welcome.html' || url === 'notepad.html') return 'app-icons/notepad-2.png';
+      if(url && !url.startsWith('http')) return 'app-icons/' + id + '.png';
+      return 'app-icons/msie1-0.png';
+    }
+
+    function saveWindowState() {
+      const state = {};
+      Object.keys(openWindows).forEach(k => {
+        const w = document.getElementById('win-' + k);
+        if(w) {
+          state[k] = { left: w.style.left, top: w.style.top, width: w.style.width, height: w.style.height, display: w.style.display };
+        }
+      });
+      sessionStorage.setItem('winState', JSON.stringify(state));
+    }
+
+    // ─── openApp ─────────────────────────────
+    function openApp(id, title, url, iconUrl) {
+      const saved = savedWindows[id];
+      if(!iconUrl) iconUrl = getIconForUrl(url, id);
+      if(openWindows[id] && document.getElementById('win-' + id)){
+        const existing = document.getElementById('win-' + id);
+        existing.style.zIndex = ++z;
+        existing.style.display = 'flex';
+        const tb = document.getElementById('tbtn-' + id);
+        if(tb) tb.classList.remove('pressed');
+        return;
+      }
+      winIdCounter++;
+      const win = document.createElement('div');
+      win.className = 'window';
+      win.id = 'win-' + id;
+      if(saved) {
+        win.style.left = saved.left || (80 + 20) + 'px';
+        win.style.top = saved.top || (80 + 20) + 'px';
+        win.style.width = saved.width || '620px';
+        win.style.height = saved.height || '420px';
+        win.style.display = saved.display || 'flex';
+      } else {
+        const offset = 20 + (winIdCounter % 10) * 20;
+        win.style.top = (80 + offset) + 'px';
+        win.style.left = (80 + offset) + 'px';
+        win.style.width = '620px';
+        win.style.height = '420px';
+      }
+      win.style.zIndex = ++z;
+      win.innerHTML = `
+        <div class="window-titlebar" id="titlebar-${id}">
+          <img src="${iconUrl}" alt="">
+          <span class="title-text">${title}</span>
+          <div class="win-buttons">
+            <div class="win-btn close-btn">&#10005;</div>
+          </div>
+        </div>
+        <div class="window-body" id="winbody-${id}">
+          <iframe src="${url}" width="100%" height="100%" style="border:none;background:#fff;"></iframe>
+          <div class="window-resizer" id="resizer-${id}"></div>
+        </div>
+      `;
+      document.body.appendChild(win);
+      openWindows[id] = true;
+      const taskBtn = document.createElement('button');
+      taskBtn.className = 'taskbar-window-btn' + (win.style.display === 'none' ? ' pressed' : ' active');
+      taskBtn.id = 'tbtn-' + id;
+      taskBtn.innerHTML = `<img src="${iconUrl}" alt=""> ${title}`;
+      taskBtn.addEventListener('click', () => {
+        const w = document.getElementById('win-' + id);
+        if(!w){ taskBtn.remove(); return; }
+        if(w.style.display === 'none' || w.style.display === ''){
+          w.style.display = 'flex'; w.style.zIndex = ++z;
+          taskBtn.classList.remove('pressed');
+        } else {
+          w.style.zIndex = ++z;
+          taskBtn.classList.remove('pressed');
+        }
+      });
+      document.getElementById('taskbarWindows').appendChild(taskBtn);
+      taskBtn.scrollIntoView({block:'nearest'});
+      win.querySelector('.close-btn').addEventListener('click', () => {
+        win.remove(); taskBtn.remove();
+        delete openWindows[id];
+        saveWindowState();
+      });
+      win.addEventListener('mousedown', () => {
+        win.style.zIndex = ++z;
+        const tb = win.querySelector('.window-titlebar');
+        tb.classList.remove('inactive');
+        Object.keys(openWindows).forEach(k => {
+          const w = document.getElementById('win-' + k);
+          if(w && w !== win) w.querySelector('.window-titlebar').classList.add('inactive');
+        });
+      });
+      makeDraggable(win, win.querySelector('.window-titlebar'));
+      const resizer = document.getElementById('resizer-' + id);
+      makeResizable(win, resizer);
+      win.querySelector('iframe').addEventListener('load', function() {
+        try {
+          const links = this.contentDocument.querySelectorAll('a');
+          links.forEach(link => {
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              const href = link.getAttribute('href');
+              if(href) {
+                if(href.startsWith('http') || href.startsWith('//')) {
+                  openUrl(href, link.innerText);
+                } else {
+                  const isLocal = !href.startsWith('http');
+                  const icon = isLocal ? getIconForUrl(href, href.replace(/\W+/g,'')) : 'app-icons/msie1-0.png';
+                  openApp(href.replace(/\W+/g,''), link.innerText || href, href, icon);
+                }
+              }
+            });
+          });
+        } catch(err) {}
+      });
+      saveWindowState();
+    }
+
+    // ─── Drag (unchanged) ────────────────────
+    function makeDraggable(el, handle) {
+      let isDragging = false, offsetX = 0, offsetY = 0;
+      handle.onmousedown = (e) => {
+        if(e.target.classList.contains('win-btn')) return;
+        isDragging = true;
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+        el.style.zIndex = ++z;
+        document.onmousemove = (e) => {
+          if(!isDragging) return;
+          let x = e.clientX - offsetX;
+          let y = e.clientY - offsetY;
+          x = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, x));
+          y = Math.max(0, Math.min(window.innerHeight - el.offsetHeight - 30, y));
+          el.style.left = x + 'px';
+          el.style.top = y + 'px';
+        };
+        document.onmouseup = () => {
+          if(isDragging) saveWindowState();
+          isDragging = false;
+          document.onmousemove = null;
+          document.onmouseup = null;
+        };
+      };
+    }
+
+    // ─── Resize (unchanged) ──────────────────
+    function makeResizable(win, resizer) {
+      let isResizing = false, startX, startY, startW, startH;
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX; startY = e.clientY;
+        startW = parseInt(getComputedStyle(win).width, 10);
+        startH = parseInt(getComputedStyle(win).height, 10);
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if(!isResizing) return;
+        win.style.width = Math.max(300, startW + (e.clientX - startX)) + 'px';
+        win.style.height = Math.max(200, startH + (e.clientY - startY)) + 'px';
+      });
+      document.addEventListener('mouseup', () => {
+        if(isResizing) saveWindowState();
+        isResizing = false;
+      });
+    }
+
+    // ─── Desktop Icon Dragging with Grid Snap ───
+    document.querySelectorAll('.desktop-icon').forEach(icon => {
+      let isDragging = false, offsetX = 0, offsetY = 0, moved = false;
+      let origLeft, origTop;
+
+      icon.addEventListener('mousedown', (e) => {
+        isDragging = true; moved = false;
+        icon.classList.add('dragging');
+        offsetX = e.clientX - icon.offsetLeft;
+        offsetY = e.clientY - icon.offsetTop;
+        origLeft = icon.offsetLeft;
+        origTop = icon.offsetTop;
+        // Deselect others, select this one
+        document.querySelectorAll('.desktop-icon.selected').forEach(el => el.classList.remove('selected'));
+        icon.classList.add('selected');
+        document.onmousemove = (me) => {
+          if(!isDragging) return;
+          const dx = Math.abs(me.clientX - e.clientX);
+          const dy = Math.abs(me.clientY - e.clientY);
+          if (dx > 3 || dy > 3) moved = true;
+          let x = me.clientX - offsetX;
+          let y = me.clientY - offsetY;
+          // Clamp to bounds
+          x = Math.max(0, Math.min(window.innerWidth - icon.offsetWidth, x));
+          y = Math.max(0, Math.min(window.innerHeight - icon.offsetHeight - 30, y));
+          icon.style.left = x + 'px';
+          icon.style.top = y + 'px';
+        };
+        document.onmouseup = () => {
+          isDragging = false;
+          icon.classList.remove('dragging');
+          document.onmousemove = null;
+          document.onmouseup = null;
+          if(moved) {
+            // Snap to grid
+            const left = parseInt(icon.style.left) || origLeft;
+            const top = parseInt(icon.style.top) || origTop;
+            const snappedLeft = Math.round(left / ICON_GRID) * ICON_GRID;
+            const snappedTop = Math.round(top / ICON_GRID) * ICON_GRID;
+            // Re-clamp after snap
+            icon.style.left = Math.max(0, Math.min(window.innerWidth - icon.offsetWidth, snappedLeft)) + 'px';
+            icon.style.top = Math.max(0, Math.min(window.innerHeight - icon.offsetHeight - 30, snappedTop)) + 'px';
+            // Save icon positions
+            saveIconPositions();
+          }
+        };
+      });
+    });
+
+    function saveIconPositions() {
+      const positions = {};
+      document.querySelectorAll('.desktop-icon').forEach(icon => {
+        positions[icon.id] = { left: icon.style.left, top: icon.style.top };
+      });
+      try { localStorage.setItem('lppos_icon_positions', JSON.stringify(positions)); } catch(e) {}
+    }
+
+    function restoreIconPositions() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('lppos_icon_positions'));
+        if(saved) {
+          Object.keys(saved).forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+              el.style.left = saved[id].left;
+              el.style.top = saved[id].top;
+            }
+          });
+        }
+      } catch(e) {}
+    }
+
+    // ─── Init ────────────────────────────────
+    window.addEventListener('load', () => {
+      restoreIconPositions();
+
+      // Always show welcome on page load (once per page session)
+      openApp('welcome', 'Notepad - Welcome', 'welcome.html', 'app-icons/notepad-2.png');
+      welcomeShownThisSession = true;
+    });
+
+    window.addEventListener('beforeunload', saveWindowState);
+  </script>
+</body>
+</html>

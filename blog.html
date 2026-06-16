@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog - Phosphor Explorer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <style>
+    body {
+      font-family: 'MS Sans Serif', Tahoma, Arial, sans-serif;
+      background: #c0c0c0;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .win-box {
+      width: 600px;
+      margin: 60px auto;
+      border: 2px solid #808080;
+      background: #fff;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+    }
+
+    .titlebar {
+      background: #000080;
+      color: #fff;
+      padding: 6px 10px;
+      font-weight: bold;
+      font-family: 'Times New Roman', Georgia, serif;
+    }
+
+    .content {
+      padding: 18px;
+      color: #000;
+    }
+
+    /* ── Index ── */
+    .blog-heading {
+      font-size: 18px;
+      font-weight: bold;
+      font-family: 'Times New Roman', Georgia, serif;
+      margin: 0 0 12px 0;
+    }
+
+    .post-card {
+      border: 1px solid #808080;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      background: #f0f0f0;
+    }
+
+    .post-card:hover {
+      background: #dde5ff;
+      border-color: #000080;
+    }
+
+    .post-card h2 {
+      font-size: 13px;
+      font-family: 'Times New Roman', Georgia, serif;
+      color: #000080;
+      margin: 0 0 2px 0;
+    }
+
+    .post-card .meta {
+      font-size: 10px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    .post-card .desc {
+      font-size: 11px;
+      margin: 0;
+    }
+
+    /* ── Post view ── */
+    #post-view { display: none; }
+
+    .back-btn {
+      font-family: 'MS Sans Serif', Tahoma, Arial, sans-serif;
+      font-size: 11px;
+      background: #c0c0c0;
+      border-top: 2px solid #fff;
+      border-left: 2px solid #fff;
+      border-right: 2px solid #808080;
+      border-bottom: 2px solid #808080;
+      padding: 2px 10px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+
+    .back-btn:active {
+      border-top: 2px solid #808080;
+      border-left: 2px solid #808080;
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+    }
+
+    .post-title {
+      font-size: 18px;
+      font-weight: bold;
+      font-family: 'Times New Roman', Georgia, serif;
+      margin: 0 0 2px 0;
+    }
+
+    .post-meta {
+      font-size: 10px;
+      color: #555;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #808080;
+    }
+
+    /* ── Markdown body ── */
+    #md-body { font-size: 12px; line-height: 1.6; }
+    #md-body h1 { font-family: 'Times New Roman', Georgia, serif; font-size: 16px; color: #000080; margin: 14px 0 5px; }
+    #md-body h2 { font-family: 'Times New Roman', Georgia, serif; font-size: 14px; color: #000080; margin: 12px 0 4px; }
+    #md-body h3 { font-family: 'Times New Roman', Georgia, serif; font-size: 12px; color: #000080; margin: 10px 0 3px; }
+    #md-body p  { margin: 0 0 8px 0; }
+    #md-body ul, #md-body ol { margin: 4px 0 8px 20px; }
+    #md-body li { margin-bottom: 2px; }
+    #md-body a  { color: #000080; }
+    #md-body a:visited { color: #551a8b; }
+    #md-body code {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      padding: 0 3px;
+    }
+    #md-body pre {
+      background: #f0f0f0;
+      border: 1px solid #808080;
+      padding: 8px;
+      overflow-x: auto;
+      margin-bottom: 8px;
+    }
+    #md-body pre code { background: none; border: none; padding: 0; }
+    #md-body blockquote {
+      border-left: 3px solid #000080;
+      margin: 8px 0;
+      padding: 4px 10px;
+      background: #f0f0f0;
+    }
+    #md-body hr { border: none; border-top: 1px solid #808080; margin: 12px 0; }
+    #md-body img { max-width: 100%; }
+    #md-body table { border-collapse: collapse; width: 100%; margin-bottom: 8px; font-size: 11px; }
+    #md-body th, #md-body td { border: 1px solid #808080; padding: 3px 6px; }
+    #md-body th { background: #c0c0c0; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="win-box">
+  <div class="titlebar" id="titlebar">Blog</div>
+  <div class="content">
+
+    <div id="index-view">
+      <p class="blog-heading">Blog / Devlog</p>
+      <div id="post-list"></div>
+    </div>
+
+    <div id="post-view">
+      <button class="back-btn" onclick="goHome()">◀ Back</button>
+      <p class="post-title" id="post-title"></p>
+      <div class="post-meta" id="post-meta"></div>
+      <div id="md-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const BLOG_JSON = 'blog/blogs.json';
+  const POSTS_DIR = 'blog/posts/';
+  let posts = [];
+
+  async function init() {
+    const res = await fetch(BLOG_JSON);
+    posts = await res.json();
+
+    document.getElementById('post-list').innerHTML = posts.map(p => `
+      <div class="post-card" onclick="loadPost('${p.slug}')">
+        <h2>${p.title}</h2>
+        <div class="meta">${fmt(p.date)}${p.tags ? ' · ' + p.tags.join(', ') : ''}</div>
+        ${p.description ? `<p class="desc">${p.description}</p>` : ''}
+      </div>
+    `).join('');
+
+    const slug = new URLSearchParams(window.location.search).get('post');
+    if (slug) loadPost(slug);
+  }
+
+  async function loadPost(slug) {
+    const post = posts.find(p => p.slug === slug);
+    const res = await fetch(`${POSTS_DIR}${slug}.md`);
+    const md = await res.text();
+
+    document.getElementById('post-title').textContent = post.title;
+    document.getElementById('post-meta').textContent =
+      fmt(post.date) + (post.tags ? ' · ' + post.tags.join(', ') : '');
+    document.getElementById('md-body').innerHTML = marked.parse(md);
+    document.getElementById('titlebar').textContent = 'Blog - ' + post.title;
+
+    document.getElementById('index-view').style.display = 'none';
+    document.getElementById('post-view').style.display = 'block';
+
+    const url = new URL(window.location);
+    url.searchParams.set('post', slug);
+    history.pushState({ slug }, post.title, url.toString());
+  }
+
+  function goHome() {
+    document.getElementById('post-view').style.display = 'none';
+    document.getElementById('index-view').style.display = 'block';
+    document.getElementById('titlebar').textContent = 'Blog';
+    history.pushState({}, 'Blog', window.location.pathname);
+  }
+
+  function fmt(iso) {
+    if (!iso) return '';
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  window.addEventListener('popstate', e => {
+    if (e.state?.slug) loadPost(e.state.slug);
+    else goHome();
+  });
+
+  init();
+</script>
+</body>
+</html>

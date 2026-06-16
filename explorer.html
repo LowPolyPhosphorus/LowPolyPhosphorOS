@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>about:blank — Internet Explorer</title>
+  <title>about:blank — Phosphor Explorer</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -46,6 +46,7 @@
       gap: 2px;
       border-bottom: 2px solid;
       border-color: #808080 #fff #fff #808080;
+      position: relative;
     }
 
     .tb-btn {
@@ -126,6 +127,23 @@
     }
     #goBtn:active { border-color: #808080 #fff #fff #808080; }
 
+    /* Compact favorites dropdown (tied to the toolbar Favorites button) */
+    .folder-dropdown {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      min-width: 180px;
+      background: #fff;
+      border: 2px solid #808080;
+      padding: 6px;
+      z-index: 10000;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+    }
+    .folder-dropdown.show { display: block; }
+    .bookmark-item { display: block; padding: 6px 8px; cursor: pointer; color: #000; font-family: 'MS Sans Serif', Tahoma, sans-serif; }
+    .bookmark-item:hover { background: #f0f0f0; }
+
     /* ── IE Logo spin area ── */
     #ie-logo {
       width: 22px;
@@ -157,42 +175,72 @@
       padding: 40px 60px;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: stretch;
       min-height: 100%;
     }
 
     .ie-home-header {
       display: flex;
       align-items: center;
-      gap: 16px;
+      justify-content: center;
+      gap: 48px;
       margin-bottom: 24px;
+      width: 100%;
     }
-    .ie-home-header svg {
-      width: 72px;
-      height: 72px;
-      flex-shrink: 0;
+    .ie-home-header .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .ie-home-header .brand-sub {
+      font-size: 13px;
+      color: #222;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      margin: 0;
+      padding-left: 6px;
     }
     .ie-home-header h1 {
-      font-size: 24px;
+      font-size: 64px;
       font-family: 'Times New Roman', Georgia, serif;
       font-style: italic;
-      color: #000080;
-      font-weight: bold;
-    }
-    .ie-home-header .ver {
-      font-size: 12px;
       color: #000;
-      font-style: normal;
-      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-weight: 700;
+      line-height: 0.9;
+      margin: 0;
+      padding-left: 2px;
     }
+    .ie-home-header h1 .line2 {
+      display: block;
+      margin-left: 0;
+    }
+    .ie-home-header h1 .minor {
+      font-size: 24px;
+      font-style: normal;
+      margin-left: 6px;
+      vertical-align: baseline;
+    }
+    /* header right-side slogan */
+    .header-slogan {
+      width: auto;
+      text-align: left;
+      color: #000;
+      font-size: 30px;
+      font-family: 'Times New Roman', Georgia, serif;
+      font-style: normal;
+      line-height: 0.95;
+      padding-right: 0;
+      margin-left: 8px;
+    }
+    .header-slogan br { display:block; content:''; line-height:0.6; }
 
     .ie-tagline {
-      font-size: 14px;
+      font-size: 13px;
       color: #333;
       text-align: center;
-      margin-bottom: 32px;
-      max-width: 460px;
-      line-height: 1.6;
+      margin: 8px auto 20px auto;
+      max-width: 480px;
+      line-height: 1.3;
     }
 
     .ie-actions {
@@ -406,18 +454,6 @@
     </button>
 
     <div style="flex:1;"></div>
-
-    <!-- Animated IE globe logo -->
-    <svg id="ie-logo" viewBox="0 0 32 32">
-      <circle cx="16" cy="16" r="14" fill="#000080" stroke="#003" stroke-width="1"/>
-      <ellipse cx="16" cy="16" rx="6" ry="14" fill="none" stroke="#4af" stroke-width="1"/>
-      <ellipse cx="16" cy="16" rx="14" ry="5" fill="none" stroke="#4af" stroke-width="1"/>
-      <line x1="2" y1="16" x2="30" y2="16" stroke="#4af" stroke-width="1"/>
-      <line x1="16" y1="2" x2="16" y2="30" stroke="#4af" stroke-width="1"/>
-      <circle cx="16" cy="16" r="14" fill="none" stroke="#4af" stroke-width="1.5"/>
-      <!-- e letter -->
-      <text x="10" y="21" font-size="13" font-family="Times New Roman" font-style="italic" font-weight="bold" fill="#fff">e</text>
-    </svg>
   </div>
 
   <!-- Address Bar -->
@@ -425,10 +461,16 @@
     <label>Address</label>
     <input type="text" id="addressInput" value="" placeholder="about:blank" />
     <button id="goBtn">Go</button>
-    <svg id="ie-logo-small" viewBox="0 0 20 20" width="20" height="20">
-      <circle cx="10" cy="10" r="9" fill="#000080"/>
-      <text x="4" y="15" font-size="11" font-family="Times New Roman" font-style="italic" font-weight="bold" fill="#fff">e</text>
-    </svg>
+    <!-- (Explorer logo removed) -->
+  </div>
+
+  <!-- Compact Favorites dropdown (opened from the toolbar Favorites button) -->
+  <div id="favoritesDropdown" class="folder-dropdown" aria-hidden="true">
+    <div class="bookmark-item" id="bookmarkAbout" data-src="about.html" data-path="C:\\My-Documents\\about.html">about.html</div>
+      <div class="bookmark-item" id="bookmarkBlog" data-src="blog.html" data-path="C:\\My-Documents\\blog.html">blog.html</div>
+    </div>
+  
+    <div class="bookmark-item" id="bookmarkBlog" data-src="blog.html" data-path="C:\\My-Documents\\blog.html">blog.html</div>
   </div>
 
   <!-- Main Content -->
@@ -436,50 +478,21 @@
     <!-- Home / New Tab Page -->
     <div class="ie-home" id="ieHomePage">
       <div class="ie-home-header">
-        <svg viewBox="0 0 72 72">
-          <circle cx="36" cy="36" r="32" fill="#000080" stroke="#003" stroke-width="2"/>
-          <ellipse cx="36" cy="36" rx="14" ry="32" fill="none" stroke="#4af" stroke-width="2"/>
-          <ellipse cx="36" cy="36" rx="32" ry="12" fill="none" stroke="#4af" stroke-width="2"/>
-          <line x1="4" y1="36" x2="68" y2="36" stroke="#4af" stroke-width="2"/>
-          <line x1="36" y1="4" x2="36" y2="68" stroke="#4af" stroke-width="2"/>
-          <circle cx="36" cy="36" r="32" fill="none" stroke="#4af" stroke-width="3"/>
-          <text x="22" y="48" font-size="30" font-family="Times New Roman" font-style="italic" font-weight="bold" fill="#fff">e</text>
-        </svg>
-        <div>
-          <h1>Internet Explorer</h1>
-          <div class="ver">Version 6.0</div>
+        <div class="brand">
+          <div class="brand-sub">LowPoly's</div>
+          <h1>Phosphor<br><span class="line2">Explorer <span class="minor">6.0</span></span></h1>
         </div>
+        <div class="header-slogan">Experience<br>The Web...</div>
       </div>
 
       <p class="ie-tagline">
-        <b>Welcome to Internet Explorer.</b> You are not currently connected to the Internet.
-        To browse the web, type an address in the Address bar above and click <b>Go</b>, 
-        or click one of the links below to get started.
+        <b>Welcome to Phosphor Explorer.</b> You are not currently connected to the Internet.
+        To browse the web, type an address in the Address bar above and click <b>Go</b>.
       </p>
 
-      <div class="ie-actions">
-        <button id="btnConnect">Connect Now</button>
-        <button id="btnWorkOffline">Work Offline</button>
-      </div>
-
-      <div class="ie-links-section">
-        <h3>Useful Links</h3>
-        <div class="ie-links-grid">
-          <a href="https://internetometer.com/give/50930" target="_blank">&#127760; Internetometer</a>
-          <a href="https://www.google.com/" target="_blank">Google Search</a>
-          <a href="https://www.microsoft.com/" target="_blank">Microsoft.com</a>
-          <a href="https://www.msn.com/" target="_blank">MSN Homepage</a>
-          <a href="https://windowsupdate.microsoft.com/" target="_blank">Windows Update</a>
-          <a href="https://www.microsoft.com/ie/" target="_blank">Internet Explorer Home</a>
-          <a href="https://lowpolyphosphorus.com/" target="_blank">LowPolyPhosphorus.com</a>
-          <a href="https://hackclub.com/" target="_blank">Hack Club</a>
-        </div>
-      </div>
-
       <div class="ie-footer">
-        Internet Explorer 6.0 &mdash; LowPolyPhoshporOS<br>
-        &copy; 2026 LowPolyPhosphorus. All rights reserved.<br>
-        Based on Microsoft&reg; Internet Explorer.
+        Phosphor Explorer &mdash; LowPolyPhosphorOS<br>
+        &copy; 2026 LowPolyPhosphorus. All rights reserved.
       </div>
     </div>
 
@@ -490,7 +503,7 @@
     <div id="blocked-msg">
       <h2>This page cannot be displayed</h2>
       <p>The website you are trying to view is restricting access from within frames.</p>
-      <p>This is a security feature used by some websites to prevent embedding. Internet Explorer cannot display this content inline.</p>
+      <p>This is a security feature used by some websites to prevent embedding. Phosphor Explorer cannot display this content inline.</p>
       <p>You can still visit the page directly:</p>
       <p><a id="blocked-link" href="#" target="_blank">(click to open)</a></p>
       <button class="open-btn" id="openDirectBtn">Open in New Window</button>
@@ -517,6 +530,10 @@
     const blockedMsg = document.getElementById('blocked-msg');
     const blockedLink = document.getElementById('blocked-link');
     const ieLogoMain = document.getElementById('ie-logo');
+    const favoritesBtn = document.getElementById('btnFavorites');
+    const favoritesDropdown = document.getElementById('favoritesDropdown');
+    const bookmarkAbout = document.getElementById('bookmarkAbout');
+    const bookmarkBlog = document.getElementById('bookmarkBlog');
 
     let currentUrl = '';
     let blockProbeTimer = null;
@@ -533,12 +550,12 @@
       blockedMsg.style.display = 'none';
       addressInput.value = '';
       addressInput.placeholder = 'about:blank';
-      document.title = 'about:blank — Internet Explorer';
+      document.title = 'about:blank — Phosphor Explorer';
       setStatus('Done');
     }
 
     function startLoading(url) {
-      ieLogoMain.classList.add('loading');
+      if (ieLogoMain) ieLogoMain.classList.add('loading');
       setStatus('Connecting to ' + url + '...');
       blockedMsg.style.display = 'none';
       ieHomePage.style.display = 'none';
@@ -546,7 +563,7 @@
     }
 
     function stopLoading() {
-      ieLogoMain.classList.remove('loading');
+      if (ieLogoMain) ieLogoMain.classList.remove('loading');
       clearTimeout(blockProbeTimer);
       setStatus('Done');
     }
@@ -558,7 +575,7 @@
       }
       currentUrl = url;
       addressInput.value = url;
-      document.title = url + ' — Internet Explorer';
+      document.title = url + ' — Phosphor Explorer';
       triedDirect = false;
       proxyAttemptIndex = 0;
 
@@ -578,7 +595,10 @@
     function checkBlank() {
       try {
         const doc = frame.contentDocument;
-        if (doc && doc.body && doc.body.innerHTML.trim().length < 30) {
+        // Only consider blocked if the iframe document has fully loaded and is empty.
+        if (!doc) return;
+        if (doc.readyState && doc.readyState !== 'complete') return;
+        if (doc.body && doc.body.innerHTML && doc.body.innerHTML.trim().length === 0) {
           onBlockDetected();
         }
       } catch (e) {
@@ -644,7 +664,25 @@
       showHomePage();
     });
     document.getElementById('btnRefresh').addEventListener('click', () => {
-      if (currentUrl) navigate(currentUrl);
+      if (currentUrl) {
+        // Force a reload of the current URL (cache-bust query param)
+        try {
+          const cacheBust = (currentUrl.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+          startLoading(currentUrl);
+          frame.src = currentUrl + cacheBust;
+        } catch (e) {
+          navigate(currentUrl);
+        }
+      } else {
+        // If no currentUrl, try reloading the iframe window
+        try {
+          if (frame.contentWindow && typeof frame.contentWindow.location.reload === 'function') {
+            frame.contentWindow.location.reload();
+          } else {
+            frame.src = frame.src;
+          }
+        } catch (e) {}
+      }
     });
     document.getElementById('btnHome').addEventListener('click', () => {
       showHomePage();
@@ -663,6 +701,39 @@
         else showHomePage();
       }
     });
+
+    // ── Bookmarks bar interactions ──
+    // Favorites button → compact dropdown
+    if (favoritesBtn && favoritesDropdown) {
+      const openFavorites = (e) => {
+        if (e) e.stopPropagation();
+        const btnRect = favoritesBtn.getBoundingClientRect();
+        favoritesDropdown.style.left = (btnRect.left) + 'px';
+        favoritesDropdown.style.top = (btnRect.bottom + 6) + 'px';
+        favoritesDropdown.classList.add('show');
+      };
+      const closeFavorites = () => { favoritesDropdown.classList.remove('show'); };
+      favoritesBtn.addEventListener('click', (e) => { if (favoritesDropdown.classList.contains('show')) closeFavorites(); else openFavorites(e); });
+      favoritesBtn.addEventListener('mouseenter', openFavorites);
+      favoritesDropdown.addEventListener('mouseleave', closeFavorites);
+      document.addEventListener('click', () => { favoritesDropdown.classList.remove('show'); });
+    }
+    if (bookmarkAbout) {
+      bookmarkAbout.addEventListener('click', () => {
+        // display the Windows path in the address bar but navigate via relative path
+        addressInput.value = String.raw`C:\My-Documents\about.html`;
+        // Use navigate so currentUrl is set and loading/probing behavior is consistent
+        navigate('about.html');
+        if (favoritesDropdown) favoritesDropdown.classList.remove('show');
+      });
+    }
+    if (bookmarkBlog) {
+      bookmarkBlog.addEventListener('click', () => {
+        addressInput.value = String.raw`C:\My-Documents\blog.html`;
+        navigate('blog.html');
+        if (favoritesDropdown) favoritesDropdown.classList.remove('show');
+      });
+    }
 
     // ── Home page buttons ──
     document.getElementById('btnConnect').addEventListener('click', () => {

@@ -201,6 +201,11 @@
     <span>Now</span>
   </div>
 
+  <div class="desktop-icon" id="desktopExplorer" style="top:20px;left:110px">
+    <img src="app-icons/msie1-0.png" alt="Explorer" draggable="false">
+    <span>Phosphor Explorer</span>
+  </div>
+
   <div id="startMenu">
     <div class="start-menu-header">
       <img src="app-icons/windows-0.png" alt="">
@@ -351,7 +356,7 @@
     document.getElementById('startShutdown').addEventListener('click', ()=>{
       startMenu.classList.remove('show');
       if(confirm('Are you sure you want to shut down?')){
-        document.body.innerHTML = '<div style="background:#000080;color:#fff;height:100vh;display:flex;align-items:center;justify-content:center;font-family:MS Sans Serif;font-size:24px;">It\'s now safe to turn off your computer.</div>';
+        document.body.innerHTML = '<div style="background:#000;color:orange;height:100vh;display:flex;align-items:center;justify-content:center;font-family:MS Sans Serif;font-size:24px;text-align:center;"><div>It\'s now safe to turn off<br>your computer</div><audio src="audio/shutdown.mp3" autoplay></audio></div>';
       }
     });
 
@@ -380,6 +385,16 @@
       openApp('now', 'Notepad - Now', 'now.html', 'app-icons/notepad-2.png');
     });
     document.getElementById('desktopNow').addEventListener('click', (e) => { e.stopPropagation(); });
+
+    // Desktop Explorer icon
+    const desktopExplorer = document.getElementById('desktopExplorer');
+    if(desktopExplorer) {
+      desktopExplorer.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        openApp('explorer', 'Phosphor Explorer', 'explorer.html', 'app-icons/msie1-0.png');
+      });
+      desktopExplorer.addEventListener('click', (e) => { e.stopPropagation(); });
+    }
 
     function getIconForUrl(url, id) {
       if(url === 'welcome.html' || url === 'notepad.html') return 'app-icons/notepad-2.png';

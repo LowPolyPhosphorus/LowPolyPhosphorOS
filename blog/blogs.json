@@ -1,0 +1,9 @@
+[
+  {
+    "slug": "post",
+    "title": "Hello",
+    "date": "2026-06-15",
+    "description": "testing the new blog",
+    "tags": ["something", "test", "probablywontwork"]
+  }
+]

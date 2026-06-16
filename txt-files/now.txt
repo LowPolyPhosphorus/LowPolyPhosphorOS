@@ -1,13 +1,7 @@
 // now.txt
-Last updated: May 2026
+Last updated: 6/15 2026
 
-Just got back from Stasis, a Hack Club hardware 
-hackathon (May 15-18). People built a 126V capacitor 
-bomb and a nerf turret that charges your debit card. 
-Standard stuff.
+Just finished up my latest project the PicoFight, a fight deck I used two Raspberry Pi Picos to make compatible with any PC. 
+https://github.com/LowPolyPhosphorus/fightdeck 
 
-Currently finishing rp2040-doom-matrix getting Doom
-running on a 16x32 LED matrix on a Raspberry Pi RP2040.
-It's not done yet.
-
-Based in Arizona. Probably soldering something.
+doing something???? maybe.

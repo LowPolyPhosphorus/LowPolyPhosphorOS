@@ -1,0 +1,4 @@
+Contact: mailto:security@lowpolyphosphor.us
+Expires: 2027-07-09T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://lowpolyphosphor.us/.well-known/security.txt
